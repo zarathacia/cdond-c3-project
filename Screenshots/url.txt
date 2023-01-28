@@ -1,0 +1,7 @@
+[URL01] https://github.com/zarathacia/cdond-c3-project
+
+[URL02] http://udapeople-97f8fca.s3-website-us-east-1.amazonaws.com/#/employees
+
+[URL03] http://d3821j2nlpppau.cloudfront.net/
+
+[URL04] http://54.89.108.75:3030/api/status
