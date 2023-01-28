@@ -1,14 +1,4 @@
 ---
-- name: "update and upgrade packages." # sudo apt upgrade
-  become: true
-  apt:
-    upgrade: yes
-    update_cache: yes
-    cache_valid_time: 86400
-- name: remove unneeded deps # sudo apt autoremove
-  become: true
-  apt:
-    autoremove: yes
 - name: "Add Node.js from source"
   become: true
   shell: |
@@ -16,7 +6,7 @@
 - name: "Install Node.js 13"
   become: true
   apt:
-    name: ["nodejs","npm"]
+    name: ["nodejs"]
     state: latest
     update_cache: yes
 
