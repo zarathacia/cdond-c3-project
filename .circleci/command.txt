@@ -13,9 +13,3 @@ sudo cp prometheus-2.19.0.linux-amd64/promtool /usr/local/bin/
 rm -rf prometheus-2.19.0.linux-amd64.tar.gz prometheus-2.19.0.linux-amd64
 
 
-  - job_name: 'node'
-    ec2_sd_configs:
-      - region: us-east-1
-        access_key: AKIA2NHD4BAAAHPDC2PP
-        secret_key: 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
-        port: 9100
