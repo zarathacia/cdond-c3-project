@@ -1,5 +1,6 @@
 aws cloudformation deploy --template-file cloudfront.yml --stack-name InitialStack --parameter-overrides WorkflowID=udapeople-randomstring
 
+aws cloudformation deploy --template-file .circleci/files/backend.yml --stack-name "udapeople-backend-888" --parameter-overrides ID="888" --tags project=udapeople-backend-888
 
 wget https://github.com/prometheus/prometheus/releases/download/v2.19.0/prometheus-2.19.0.linux-amd64.tar.gz
 tar xvfz prometheus-2.19.0.linux-amd64.tar.gz
