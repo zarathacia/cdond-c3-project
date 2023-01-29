@@ -81,7 +81,6 @@ jobs:
           keys: [frontend-build]
       - run:
           name: Build front-end
-          working_directory: ./frontend
           command: |
             cd frontend
             npm install
@@ -99,7 +98,6 @@ jobs:
           keys: [backend-build]
       - run:
           name: Back-end build
-          working_directory: ./backend
           command: |
             npm i
             npm run build
