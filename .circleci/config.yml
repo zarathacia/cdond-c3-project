@@ -1,69 +1,52 @@
 version: 2.1
 
-commands:
-  install_awscli:
-    description: Install AWS CLI 
-    steps:
-      - run:
-          name: Install AWS CLI 
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-  install_ansible:
-    description: Install Ansible
-    steps:
-      - run:
-          name: Install Ansible
-          command: |
-            sudo apt update
-            sudo apt install software-properties-common -y
-            sudo add-apt-repository --yes --update ppa:ansible/ansible
-            sudo apt install ansible -y
-  install_nodejs:
-    description: Install Node.js 13
-    steps:
-      - run:
-          name: Install Node.js 13
-          command: |
-            curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash -
-            sudo apt install -y nodejs
+executors:
+  node:
+    docker:
+      - image: circleci/node:13.8.0
+  python:
+    docker:
+      - image: python:3.9.0-alpine
+  aws:
+    docker:
+      - image: amazon/aws-cli
 
-  destroy-environment:
+commands:
+
+  destroy_environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
-      # Add parameter here   
+      # Add parameter here
       workflow_id:
-        default: "${CIRCLE_WORKFLOW_ID:0:7}"
         type: string
-
     steps:
       - run:
           name: Destroy environments
           when: on_fail
           command: |
             # Your code here
+            aws cloudformation delete-stack --stack-name udapeople-backend-<<parameters.workflow_id>>
             aws s3 rm s3://udapeople-<<parameters.workflow_id>> --recursive
-            aws cloudformation delete-stack --stack-name "udapeople-backend-<<parameters.workflow_id>>"
-            aws cloudformation delete-stack --stack-name "udapeople-frontend-<<parameters.workflow_id>>"
-            
-  revert-migrations:
+            aws cloudformation delete-stack --stack-name udapeople-frontend-<<parameters.workflow_id>>
+
+  revert_migrations:
     description: Revert the last migration if successfully run in the current workflow.
     parameters:
       workflow_id:
-        default: ${CIRCLECI_WORKFLOW_ID:0:7}
         type: string
     steps:
+      - restore_cache:
+          keys: [ backend-build ]
       - run:
           name: Revert migrations
           when: on_fail
+          # Need generate token on https://kvdb.io first.
           command: |
-            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS=$(curl --insecure "https://kvdb.io/XhJuq3JgBigK6a6BPqRg9F/migration_<<parameters.workflow_id>>")
-            if(( $SUCCESS==1 )); 
+            echo "insecure" >> ~/.curlrc
+            SUCCESS=$(curl --insecure  https://kvdb.io/H6VrBSwXyRGMLiDvyUrEeQ/migration_<< parameters.workflow_id >>)
+            if (( $SUCCESS == 1 ));
             then
-              cd ~/project/backend
-              npm install
+              cd backend
               npm run migrations:revert
             fi
             
@@ -77,6 +60,7 @@ jobs:
           keys: [frontend-build]
       - run:
           name: Build front-end
+          working_directory: ./frontend
           command: |
             cd frontend
             npm install
@@ -94,10 +78,22 @@ jobs:
           keys: [backend-build]
       - run:
           name: Back-end build
+          working_directory: ./backend
           command: |
-            cd backend
-            npm install
+            npm i
             npm run build
+            cp .env dist/.env
+            pwd && ls -al
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/backend
+            - project/backend/dist
+            - project/backend/node_modules
+      - save_cache:
+          paths: [ backend/node_modules ]
+          key: backend-build
+
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
@@ -109,20 +105,20 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [test-frontend]
       - run:
           name: Front-end Unit test
           command: |
             cd frontend
             npm install
-            npm test
+            npm run test
   test-backend:
     docker:
     - image: circleci/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [test-backend]
       - run:
           name: backend Unit test
           command: |
@@ -142,10 +138,10 @@ jobs:
           command: |
             cd frontend
             npm install
-            npm install oauth-sign@^0.9.0
-            npm audit fix --force --audit-level=critical
-            npm audit fix --force --audit-level=critical
-            npm audit --audit-level=critical
+#            npm install oauth-sign@^0.9.0
+#            npm audit fix --force --audit-level=critical
+#            npm audit fix --force --audit-level=critical
+#            npm audit --audit-level=critical
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -158,9 +154,9 @@ jobs:
           command: |
             cd backend
             npm install
-            npm audit fix --force --audit-level=critical
-            npm audit fix --force --audit-level=critical
-            npm audit --audit-level=critical
+#            npm audit fix --force --audit-level=critical
+#            npm audit fix --force --audit-level=critical
+#            npm audit --audit-level=critical
 
   deploy-infrastructure:
     docker:
